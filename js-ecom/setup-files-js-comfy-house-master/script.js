@@ -79,15 +79,57 @@ class UI{
             event.target.disabled = true;
             //7-get product from products inside storage we create a getProduct function where we pass the id as a parameter with the json parse we store the products inside the localStorage and we return the product.id 
             //with the same id, then i set cartitem to be equal to the methodgetproduct inside storage and i pass the id to it
-            let cartItem = Storage.getProduct(id);
-            console.log(cartItem);
-            //add product to the cart
-            //save cart in local storage//
-            //set cart value
-            //display cart item
-            //show cart
+            // we use the spread the operator so it return an object with the data and the amount of 1
+            let cartItem = {...Storage.getProduct(id),amount:1};
+
+            //8-add product to the cart, we add the cartItem to the cart with a spread operator
+            cart = [...cart,cartItem];
+            //9-save cart in local storage we save the item in the localstorage with the saveCart function insdide Storage class
+            Storage.saveCart(cart);
+            //10-set cart value, we use this to acess the setcartValue we define , we pass the cart as a parameter, then we
+            // define the itemstotal and temptotal at 0, we create an array from cart that define the value of the 2 total
+            //we set the innerhtml of the 2 value to show them in html 
+            this.setCartValues(cart);
+            //11-display cart item, with the addCartItem we pass the item to this new function,we create a div,we add the css class with classlist , we create the timplete literal and we pull some data from the item
+            // we display the content inside cartContent with the appendChild
+            this.addCartItem(cartItem)
+            //12-show cart we create showcart that add 2 class when we add item in the shopping cart
+            this.showCart();
             });
         });
+    }
+    setCartValues(cart){
+        let tempTotal = 0;
+        let itemsTotal = 0;
+        cart.map(item => {
+            tempTotal += item.price * item.amount;
+            itemsTotal += item.amount;
+        })
+        //parseFloat because tofixed return a string
+        cartTotal.innerText = parseFloat(tempTotal.toFixed(2));
+        cartItems.innerText = itemsTotal;
+    }
+    addCartItem(item){
+        const div = document.createElement('div');
+        div.classList.add('cart-item');
+        div.innerHTML = `
+        <img src=${item.image} alt="">
+        <div>
+            <h4>${item.title}</h4>
+            <h5>$ ${item.price}</h5>
+            <span class="remove-item" data-id=${item.id}>Remove</span>
+        </div>
+        <div>
+            <i class="fas fa-chevron-up" data-id=${item.id}></i>
+            <p class="item-amount">${item.amount}</p>
+            <i class="fas fa-chevron-down" data-id=${item.id}></i>
+        </div>
+        `;
+        cartContent.appendChild(div);
+    }
+    showCart(){
+        cartOverlay.classList.add('transparentBcg');
+        cartDOM.classList.add('showCart');
     }
 }
 
@@ -101,6 +143,9 @@ class Storage{
     static getProduct(id){
         let products = JSON.parse(localStorage.getItem('products'));
         return products.find(product => product.id === id);
+    }
+    static saveCart(cart){
+        localStorage.setItem('cart',JSON.stringify(cart));
     }
 }
 
