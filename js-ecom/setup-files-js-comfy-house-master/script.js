@@ -2,7 +2,7 @@
 
 const cartBtn = document.querySelector('.cart-btn');
 const closeCartBtn = document.querySelector('.close-cart');
-const clearCartBtn = document.querySelector('.clear-btn');
+const clearCartBtn = document.querySelector('.clear-cart');
 const cartDOM = document.querySelector('.cart');
 const cartOverlay = document.querySelector('.cart-overlay');
 const cartItems = document.querySelector('.cart-items');
@@ -54,7 +54,7 @@ class UI{
             <div class="img-container">
             <img src=${product.image} alt="" class="product-img">
             <button class="bag-btn" data-id=${product.id}>
-                <i class="fas fa-shopping-cart">Add to bag</i>
+                <i class="fas fa-shopping-cart">Add to cart</i>
             </button>
             </div>
             <h3>${product.title}</h3>
@@ -131,11 +131,55 @@ class UI{
         cartOverlay.classList.add('transparentBcg');
         cartDOM.classList.add('showCart');
     }
+    // 14-,inside SetupApp we define that the cart is equal to this method,we reuse setcartvalues and populatecart passing cart to them
+    // we reuse showcart to open the cart if we click on the cart icon and we close the cart if we click on it after define the hide method,
+    // we create the populate cart function where we loop though the addcartitem and use it to populate the cart
+    setupAPP(){
+        cart = Storage.getCart();
+        this.setCartValues(cart);
+        this.populateCart(cart);
+        cartBtn.addEventListener('click',this.showCart);
+        closeCartBtn.addEventListener('click',this.hideCart);
+    }
+    populateCart(cart){
+        cart.forEach(item => this.addCartItem(item));
+    }
+    hideCart(){
+        cartOverlay.classList.remove('transparentBcg');
+        cartDOM.classList.remove('showCart');
+    }
+    cartLogic(){
+        clearCartBtn.addEventListener('click', () => {
+            this.clearCart();
+        });
+    }
+    clearCart(){
+        let cartItems = cart.map(item => item.id);
+        cartItems.forEach(id => this.removeItem(id));
+        console.log(cartContent.children);
+        while(cartContent.children.length > 0){
+            cartContent.removeChild(cartContent.children[0])
+        }
+        this.hideCart();
+    }
+    removeItem(id){
+        cart = cart.filter(item => item.id !== id);
+        this.setCartValues(cart);
+        Storage.saveCart(cart);
+        let button = this.getSingleButton(id);
+        button.disabled = false;
+        button.innerHTML = `<i class="fas fa-shopping-cart></i> add to cart`
+    }
+    getSingleButton(id){
+        return buttonsDom.find(button => button.dataset.id === id);
+    }
 }
 
 //local storage
 //4-we create a static method that take the products as an argument and store the inside the localStorage with localStorage.setItem
- // inside the parethesis we pass the keyname products and the keyvalue products but we need to Json.stringify to convert the object to a jsons string
+// inside the parethesis we pass the keyname products and the keyvalue products but we need to Json.stringify to convert the object to a jsons string
+//13- with the function getcart we verify if there is the cart stored inside the localstorage,if there is we will save inside the localstorage
+//otherwise the cart will be empty
 class Storage{
     static saveProducts(products){
         localStorage.setItem("products",JSON.stringify(products));
@@ -147,6 +191,9 @@ class Storage{
     static saveCart(cart){
         localStorage.setItem('cart',JSON.stringify(cart));
     }
+    static getCart(){
+        return localStorage.getItem('cart')?JSON.parse(localStorage.getItem('cart')):[];  
+    }
 }
 
 // 2- we add a eventlistener that wait for a content to be load into the dom, we initialize 2 new object products and ui and with prodcuts we get all the products from the getProducts function from step 1
@@ -155,11 +202,14 @@ class Storage{
 document.addEventListener("DOMContentLoaded",()=>{
     const ui = new UI();
     const products = new Products();
+    //setup app
+    ui.setupAPP();
     //get all products
     products.getProducts().then(products => {
         ui.displayProducts(products)
         Storage.saveProducts(products);
     }).then(()=>{
         ui.getBagButtons();
+        ui.cartLogic();
     });
 });
